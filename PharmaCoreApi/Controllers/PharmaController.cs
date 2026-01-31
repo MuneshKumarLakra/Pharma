@@ -73,6 +73,7 @@ namespace PharmaCoreApi.Controllers
 
         [HttpGet]
         [Route("GetAll")]
+        [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Client)]
         public async Task<IActionResult> Get()
         {
             _logger.LogInformation("fetching all documents from couchDB against");
@@ -87,21 +88,18 @@ namespace PharmaCoreApi.Controllers
         }
 
         [HttpGet("{id}")]
+        [ResponseCache(Duration = 30, Location = ResponseCacheLocation.Client, VaryByQueryKeys = new[] { "id" })]
         public async Task<IActionResult> Get(string id)
         {
             _logger.LogInformation("fetching data from couchDB against id {0}", id);
             var result = await _couchRepository.GetDocumentAsync(id);
             if (result.IsSuccess)
             {
-                // var responseContent = result.SuccessContentObject;
                 var responseString = result.SuccessContentObject;
-
                 dynamic task = JObject.Parse(responseString);
-
                 var sResult = JsonConvert.DeserializeObject<ListPharmaDetails>(responseString);
                 _logger.LogInformation("Data from couchDb fetched against id {0}", id);
                 return new OkObjectResult(sResult);
-
             }
             return new NotFoundObjectResult("NotFound");
         }
