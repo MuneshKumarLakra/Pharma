@@ -135,8 +135,34 @@ Eliminates fragmented pharmaceutical service management by providing a centraliz
 - Vuex 3.6
 - Moment.js for date handling
 
+
 **Database:**
 - Apache CouchDB (NoSQL document database)
+
+---
+
+## 📝 Logging Framework Details
+
+The Pharma application uses **NLog** as its primary logging framework for structured logging and diagnostics in the backend (`PharmaCoreApi`).
+
+- **File Logging**: All logs (including trace-level) are written to daily log files under the `Log` directory, with detailed timestamps, messages, and stack traces for exceptions.
+- **Application Insights Integration**: NLog is extended with the `Microsoft.ApplicationInsights.NLogTarget` to send logs and telemetry data directly to Azure Application Insights for centralized monitoring, performance tracking, and diagnostics.
+- **Exception Handling**: The backend uses a global exception handler (see `ExtensionHelper.ConfigureExceptionHandler`) to capture unhandled exceptions, log them using NLog, and return standardized error responses.
+- **Configuration**: Logging rules and targets are defined in `nlog.config`, specifying log levels, output formats, and destinations (file and Application Insights).
+- **Telemetry Context**: Additional context properties (such as thread ID) are attached to Application Insights logs for enhanced traceability.
+
+**Key Files:**
+- `PharmaCoreApi/nlog.config`: NLog configuration (targets, rules, Application Insights integration)
+- `PharmaCoreApi/Startup.cs`: NLog initialization and logger injection
+- `PharmaCoreApi/Helper/ExtensionHelper.cs`: Centralized exception logging
+
+**Benefits:**
+- Centralized and persistent log storage (file and cloud)
+- Real-time monitoring and alerting via Azure Application Insights
+- Detailed error tracking and diagnostics for faster troubleshooting
+- Compliance with operational and audit requirements
+
+For more details, see the `nlog.config` file and the `ConfigureExceptionHandler` method in the backend source code.
 
 **Development Tools:**
 - Vue CLI 4.5
