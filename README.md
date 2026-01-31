@@ -685,11 +685,18 @@ npm run lint -- --fix
 - **Database**: dev_pharma_db
 - **Auto-deploy**: On commit to `develop` branch
 
-#### QA/Staging
-- **Purpose**: User acceptance testing, pre-production validation
+
+#### QA
+- **Purpose**: Quality assurance testing, pre-production validation
 - **URL**: `https://qa.pharma.local`
 - **Database**: qa_pharma_db
 - **Deploy**: Manual approval from develop branch
+
+#### UAT (User Acceptance Testing)
+- **Purpose**: Final user acceptance testing before production
+- **URL**: `https://uat.pharma.local`
+- **Database**: uat_pharma_db
+- **Deploy**: Manual approval from QA branch or after QA sign-off
 
 #### Production
 - **Purpose**: Live production environment
