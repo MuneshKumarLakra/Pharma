@@ -40,6 +40,7 @@ namespace PharmaCoreApi
             services.AddControllers();
             services.AddHttpClient();
             services.AddSingleton<ICouchRepository, CouchRepository>();
+            services.AddSingleton<IFileRepository, FileRepository>();
             services.AddHttpClient("Couchdb",c =>
             {
                 c.BaseAddress = new Uri(Configuration["CouchDB:URL"]);
