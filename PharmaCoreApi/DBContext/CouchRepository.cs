@@ -63,17 +63,21 @@ namespace PharmaCoreApi.Models
             return response;
         }
 
-        public async Task<HttpClientResponse> GetAllDocumentsAsync()
+        public async Task<HttpClientResponse> GetAllDocumentsAsync(int? limit = null, int? skip = null)
         {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             HttpClientResponse response = new HttpClientResponse();
             var _httpClient = _clientFactory.CreateClient("Couchdb");
-
-            var dbResult = await _httpClient.GetAsync(_couchDbName + "/_all_docs");
-
+            string url = _couchDbName + "/_all_docs?include_docs=true";
+            if (limit.HasValue) url += "&limit=" + limit.Value;
+            if (skip.HasValue) url += "&skip=" + skip.Value;
+            var dbResult = await _httpClient.GetAsync(url).ConfigureAwait(false);
+            sw.Stop();
+            _logger.LogInformation($"GetAllDocumentsAsync took {sw.ElapsedMilliseconds} ms");
             if (dbResult.IsSuccessStatusCode)
             {
                 response.IsSuccess = true;
-                response.SuccessContentObject = await dbResult.Content.ReadAsStringAsync();
+                response.SuccessContentObject = await dbResult.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
             else
             {
@@ -85,14 +89,16 @@ namespace PharmaCoreApi.Models
 
         public async Task<HttpClientResponse> GetDocumentAsync(string id)
         {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             HttpClientResponse response = new HttpClientResponse();
             var _httpClient = _clientFactory.CreateClient("Couchdb");
-            var dbResult = await _httpClient.GetAsync(_couchDbName + "/" + id);
-
+            var dbResult = await _httpClient.GetAsync(_couchDbName + "/" + id).ConfigureAwait(false);
+            sw.Stop();
+            _logger.LogInformation($"GetDocumentAsync for id {id} took {sw.ElapsedMilliseconds} ms");
             if (dbResult.IsSuccessStatusCode)
             {
                 response.IsSuccess = true;
-                response.SuccessContentObject = await dbResult.Content.ReadAsStringAsync();
+                response.SuccessContentObject = await dbResult.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
             else
             {
@@ -104,6 +110,7 @@ namespace PharmaCoreApi.Models
 
         public async Task<HttpClientResponse> GetViewAsync(QueryView queryView)
         {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             _logger.LogInformation("starting in FindDocument.");
             HttpClientResponse response = new HttpClientResponse();
             _logger.LogInformation("starting httpclient from clientfactory.");
@@ -111,40 +118,39 @@ namespace PharmaCoreApi.Models
             _logger.LogInformation("Completed httpclient from clientfactory.");
             var queryParameters = queryView.Filters.GetQueryString();
             _logger.LogInformation("Fetching data from client");
-            var dbResult = await _httpClient.GetAsync(_couchDbName + "/_design/" + queryView.DesignDocumentName + "/_view/" + queryView.ViewName + queryParameters);
+            var dbResult = await _httpClient.GetAsync(_couchDbName + "/_design/" + queryView.DesignDocumentName + "/_view/" + queryView.ViewName + queryParameters).ConfigureAwait(false);
+            sw.Stop();
+            _logger.LogInformation($"GetViewAsync took {sw.ElapsedMilliseconds} ms");
             _logger.LogInformation("Fetched data from client");
             if (dbResult.IsSuccessStatusCode)
             {
                 response.IsSuccess = true;
-                response.SuccessContentObject = await dbResult.Content.ReadAsStringAsync();
+                response.SuccessContentObject = await dbResult.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
             else
             {
                 response.IsSuccess = false;
                 response.FailedReason = dbResult.ReasonPhrase;
-                throw new Exception(String.Format("{0} {1} {2}", dbResult.ReasonPhrase, dbResult.Content.ReadAsStringAsync(), dbResult.StatusCode));
+                throw new Exception(String.Format("{0} {1} {2}", dbResult.ReasonPhrase, dbResult.Content.ReadAsStringAsync().Result, dbResult.StatusCode));
             }
-
             return response;
         }
 
         public async Task<HttpClientResponse> FindDocument(Query str)
         {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             _logger.LogInformation("starting in FindDocument.");
             HttpClientResponse response = new HttpClientResponse();
-
-            _logger.LogInformation("starting httpclient from clientfactory.");
-             var _httpClient = _clientFactory.CreateClient("Couchdb");
-            _logger.LogInformation("Completed httpclient from clientfactory.");
+            var _httpClient = _clientFactory.CreateClient("Couchdb");
             var jsonData = JsonConvert.SerializeObject(str);
             var httpContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
-            _logger.LogInformation("Fetching data from client");
-            var dbResult = await _httpClient.PostAsync(_couchDbName + "/_find", httpContent).ConfigureAwait(true);
-            _logger.LogInformation("Fetched data from client");
+            var dbResult = await _httpClient.PostAsync(_couchDbName + "/_find", httpContent).ConfigureAwait(false);
+            sw.Stop();
+            _logger.LogInformation($"FindDocument took {sw.ElapsedMilliseconds} ms");
             if (dbResult.IsSuccessStatusCode)
             {
                 response.IsSuccess = true;
-                response.SuccessContentObject = await dbResult.Content.ReadAsStringAsync();
+                response.SuccessContentObject = await dbResult.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
             else
             {
@@ -175,22 +181,21 @@ namespace PharmaCoreApi.Models
 
         public async Task<HttpClientResponse> PostDocumentAsync(PharmaDetails pharmaDetails)
         {
-
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             HttpClientResponse response = null;
             try
             {
                 response = new HttpClientResponse();
-                 var _httpClient = _clientFactory.CreateClient("Couchdb");
+                var _httpClient = _clientFactory.CreateClient("Couchdb");
                 var jsonData = JsonConvert.SerializeObject(pharmaDetails);
                 var httpContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
-
-                //CouchDB URL : POST http://{hostname_or_IP}:{Port}/{couchDbName}  
-                var postResult = await _httpClient.PostAsync(_couchDbName, httpContent).ConfigureAwait(true);
-
+                var postResult = await _httpClient.PostAsync(_couchDbName, httpContent).ConfigureAwait(false);
+                sw.Stop();
+                _logger.LogInformation($"PostDocumentAsync took {sw.ElapsedMilliseconds} ms");
                 if (postResult.IsSuccessStatusCode)
                 {
                     response.IsSuccess = true;
-                    response.SuccessContentObject = await postResult.Content.ReadAsStringAsync();
+                    response.SuccessContentObject = await postResult.Content.ReadAsStringAsync().ConfigureAwait(false);
                 }
                 else
                 {
@@ -206,15 +211,14 @@ namespace PharmaCoreApi.Models
                     response.IsSuccess = false;
                 }
             }
-
-
             return response;
         }
 
         public async Task<HttpClientResponse> PutDocumentAsync(UpdatePharmaDetails update)
         {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             HttpClientResponse response = new HttpClientResponse();
-             var _httpClient = _clientFactory.CreateClient("Couchdb");
+            var _httpClient = _clientFactory.CreateClient("Couchdb");
             var updateToDb = new
             {
                 update.Name,
@@ -223,16 +227,15 @@ namespace PharmaCoreApi.Models
             };
             var jsonData = JsonConvert.SerializeObject(updateToDb);
             var httpContent = new StringContent(jsonData, Encoding.UTF8, "application/json");
-
-            //CouchDB URL : PUT http://{hostname_or_IP}:{Port}/{couchDbName}/{_id}/?rev={_rev}  
             var putResult = await _httpClient.PutAsync(_couchDbName + "/" +
-                                                      update.Id +
-                                                      "?rev=" + update.Rev, httpContent).ConfigureAwait(true);
-
+                                              update.Id +
+                                              "?rev=" + update.Rev, httpContent).ConfigureAwait(false);
+            sw.Stop();
+            _logger.LogInformation($"PutDocumentAsync took {sw.ElapsedMilliseconds} ms");
             if (putResult.IsSuccessStatusCode)
             {
                 response.IsSuccess = true;
-                response.SuccessContentObject = await putResult.Content.ReadAsStringAsync();
+                response.SuccessContentObject = await putResult.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
             else
             {

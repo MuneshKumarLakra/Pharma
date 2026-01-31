@@ -55,6 +55,9 @@ namespace PharmaCoreApi
                     });
             });
 
+            services.AddResponseCompression();
+            services.AddResponseCaching();
+
             // services.AddApplicationInsightsTelemetry(Configuration);
         }
 
@@ -70,6 +73,9 @@ namespace PharmaCoreApi
            // app.UseHttpsRedirection();
             app.ConfigureExceptionHandler(logger);
             app.UseRouting();
+            app.UseResponseCompression();
+            app.UseResponseCaching();
+
             //app.UseEndpoints(endpoints =>
             //{
             //    endpoints.MapControllerRoute("default", "{controller}/{action}");
